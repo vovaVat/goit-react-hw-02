@@ -2,29 +2,17 @@ import { useEffect, useState } from "react";
 import Description from "./components/Description";
 import Options from "./components/Options";
 import Feedback from "./components/Feedback";
+import Notification from "./components/Notification";
 
 function App() {
-  const [feedObject, setFeedObject] = useState({
-    good: 0,
-    neutral: 0,
-    bad: 0,
+  const [feedObject, setFeedObject] = useState(() => {
+    const savedFeed = window.localStorage.getItem("feed");
+    return savedFeed ? JSON.parse(savedFeed) : { good: 0, neutral: 0, bad: 0 };
   });
 
-  const [isInitialLoad, setIsInitialLoad] = useState(true);
-
   useEffect(() => {
-    const feed = JSON.parse(window.localStorage.getItem("feed"));
-    if (feed) {
-      setFeedObject(feed);
-    }
-    setIsInitialLoad(false);
-  }, []);
-
-  useEffect(() => {
-    if (!isInitialLoad) {
-      window.localStorage.setItem("feed", JSON.stringify(feedObject));
-    }
-  }, [feedObject, isInitialLoad]);
+    window.localStorage.setItem("feed", JSON.stringify(feedObject));
+  }, [feedObject]);
 
   const totalFeedback = feedObject.good + feedObject.neutral + feedObject.bad;
   const positivePersent =
@@ -49,11 +37,15 @@ function App() {
     <>
       <Description />
       <Options click={updateFeedback} total={totalFeedback} />
-      <Feedback
-        feed={feedObject}
-        total={totalFeedback}
-        positive={positivePersent}
-      />
+      {totalFeedback > 0 ? (
+        <Feedback
+          feed={feedObject}
+          total={totalFeedback}
+          positive={positivePersent}
+        />
+      ) : (
+        <Notification />
+      )}
     </>
   );
 }
